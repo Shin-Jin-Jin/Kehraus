@@ -41,7 +41,7 @@ jobs:
           $files = Get-ChildItem dist | ForEach-Object { '{0} ({1:N0} KB)' -f $_.Name, ($_.Length / 1KB) }
           Write-Host "::notice title=Paketinhalt::$($files -join ', ')"
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Kehraus
           path: dist/
