@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $buildArgs = @('build', 'src/Kehraus/Kehraus.csproj', '-c', 'Release', '-o', 'out')
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            $buildArgs += "-p:Version=$('${{ github.ref_name }}'.TrimStart('v'))"
+          }
+          dotnet @buildArgs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Paket zusammenstellen
+        shell: pwsh
+        run: |
+          Get-ChildItem out | Format-Table Name, Length -AutoSize | Out-String | Write-Host
+          New-Item -ItemType Directory dist | Out-Null
+          Copy-Item out/Kehraus.exe, out/Kehraus.exe.config dist/
+          Get-ChildItem out -Filter *.dll | Copy-Item -Destination dist/
+          Compress-Archive -Path dist/* -DestinationPath Kehraus.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kehraus
+          path: dist/
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" Kehraus.zip --title "Kehraus ${{ github.ref_name }}" --generate-notes

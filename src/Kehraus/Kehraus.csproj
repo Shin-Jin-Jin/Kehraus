@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- .NET Framework 4.8 ist auf jedem Windows 10/11 vorhanden: keine Runtime-Installation nötig -->
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Kehraus</RootNamespace>
+    <AssemblyName>Kehraus</AssemblyName>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <ApplicationIcon>Assets\Kehraus.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DebugType>embedded</DebugType>
+    <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <Version>1.0.0</Version>
+    <Product>Kehraus</Product>
+    <Title>Kehraus</Title>
+    <Description>Zeigt installierte Programme, ihren Speicherort und ihre tatsächliche Größe – und deinstalliert sie.</Description>
+    <Authors>Shin_Jin_Jin</Authors>
+    <Copyright>© 2026 Shin_Jin_Jin</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Referenzassemblies für .NET Framework 4.8, damit der Build ohne Developer Pack läuft -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <!-- Windows-Paketmanager (Store-Apps auflisten und entfernen) -->
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Kehraus.ico" />
+  </ItemGroup>
+
+</Project>

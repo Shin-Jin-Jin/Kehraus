@@ -1,0 +1,172 @@
+<Window x:Class="Kehraus.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kehraus" Width="1340" Height="860" MinWidth="980" MinHeight="580"
+        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI" FontSize="13"
+        Background="#F3F4F6" UseLayoutRounding="True" Icon="Assets/Kehraus.ico"
+        ContentRendered="Window_ContentRendered" Closing="Window_Closing">
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    <Style TargetType="Button">
+      <Setter Property="Padding" Value="12,5"/>
+      <Setter Property="Margin" Value="6,0,0,0"/>
+    </Style>
+    <Style x:Key="InfoLabel" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="#5B6672"/>
+      <Setter Property="Margin" Value="0,2,14,2"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="InfoValue" TargetType="TextBox">
+      <Setter Property="IsReadOnly" Value="True"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Margin" Value="0,2"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="RightCell" TargetType="TextBlock">
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+      <Setter Property="Margin" Value="0,0,6,0"/>
+    </Style>
+  </Window.Resources>
+
+  <DockPanel>
+    <!-- Kopfzeile -->
+    <Border DockPanel.Dock="Top" Background="#1E2833" Padding="18,12">
+      <DockPanel>
+        <TextBlock x:Name="TxtMachine" DockPanel.Dock="Right" Foreground="#C9D3DD" VerticalAlignment="Center"/>
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Kehraus" Foreground="White" FontSize="22" FontWeight="SemiBold"/>
+            <TextBlock x:Name="TxtVersion" Foreground="#7F8C99" FontSize="12" Margin="8,0,0,3" VerticalAlignment="Bottom"/>
+          </StackPanel>
+          <TextBlock Foreground="#AEBBC8" Text="Installierte Programme – wo sie liegen und wie viel Platz sie wirklich belegen"/>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- Laufwerke -->
+    <ItemsControl x:Name="DriveCards" DockPanel.Dock="Top" Margin="12,12,2,2">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Background="White" BorderBrush="#D8DDE3" BorderThickness="1" CornerRadius="6"
+                  Padding="12,9" Margin="0,0,10,10" Width="320">
+            <StackPanel>
+              <TextBlock Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis"/>
+              <ProgressBar Height="7" Margin="0,7,0,7" Maximum="100" Value="{Binding UsedPercent, Mode=OneWay}"
+                           Visibility="{Binding HasBar, Mode=OneWay, Converter={StaticResource BoolToVis}}"/>
+              <TextBlock Text="{Binding Line1, Mode=OneWay}" Foreground="#4A5561" TextTrimming="CharacterEllipsis"/>
+              <TextBlock Text="{Binding Line2, Mode=OneWay}" Foreground="#1E2833" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,0"/>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- Werkzeugleiste -->
+    <Grid DockPanel.Dock="Top" Margin="12,0,12,10">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <TextBlock Text="Suchen" VerticalAlignment="Center" Margin="0,0,6,0"/>
+        <TextBox x:Name="TxtSearch" Width="250" Padding="4,3" VerticalContentAlignment="Center"
+                 ToolTip="Sucht in Name, Hersteller und Ordner" TextChanged="Filter_Changed"/>
+        <TextBlock Text="Laufwerk" VerticalAlignment="Center" Margin="16,0,6,0"/>
+        <ComboBox x:Name="CmbDrive" Width="150" SelectionChanged="CmbDrive_SelectionChanged"/>
+        <CheckBox x:Name="ChkStore" Content="Store-Apps anzeigen" IsChecked="True" VerticalAlignment="Center"
+                  Margin="16,0,0,0" Click="Filter_Changed"/>
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal">
+        <Button x:Name="BtnAdmin" Content="Als Administrator neu starten" Click="BtnAdmin_Click"
+                ToolTip="Misst auch geschützte Ordner vollständig. Hinweis: Ein anderes Admin-Konto sieht die Programme, die nur für dein Benutzerkonto installiert sind, nicht."/>
+        <Button x:Name="BtnExport" Content="CSV exportieren" Click="BtnExport_Click"/>
+        <Button x:Name="BtnRefresh" Content="Aktualisieren" Click="BtnRefresh_Click"/>
+        <Button x:Name="BtnOpen" Content="Ordner öffnen" Click="BtnOpen_Click"/>
+        <Button x:Name="BtnUninstall" Content="Deinstallieren" Click="BtnUninstall_Click"
+                Background="#C0392B" Foreground="White" FontWeight="SemiBold"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- Statuszeile -->
+    <Border DockPanel.Dock="Bottom" Background="#E4E7EB" Padding="12,6">
+      <DockPanel>
+        <ProgressBar x:Name="Prog" DockPanel.Dock="Right" Width="180" Height="10" Visibility="Collapsed" Margin="12,0,0,0"/>
+        <TextBlock x:Name="TxtStatus" Text="Lese Programmliste …" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+      </DockPanel>
+    </Border>
+
+    <!-- Details zum ausgewählten Programm -->
+    <Border DockPanel.Dock="Bottom" Background="White" BorderBrush="#D8DDE3" BorderThickness="1" CornerRadius="6"
+            Margin="12,0,12,10" Padding="12,8" DataContext="{Binding SelectedItem, ElementName=AppList}">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Style="{StaticResource InfoLabel}" Text="Ordner"/>
+        <TextBox   Grid.Row="0" Grid.Column="1" Style="{StaticResource InfoValue}" Text="{Binding InstallPath, Mode=OneWay}"/>
+        <TextBlock Grid.Row="1" Style="{StaticResource InfoLabel}" Text="Ermittelt über"/>
+        <TextBox   Grid.Row="1" Grid.Column="1" Style="{StaticResource InfoValue}" Text="{Binding PathSource, Mode=OneWay}"/>
+        <TextBlock Grid.Row="2" Style="{StaticResource InfoLabel}" Text="Messung"/>
+        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="{Binding SizeSource, Mode=OneWay}"/>
+          <TextBlock Text="{Binding FilesText, Mode=OneWay}" Foreground="#5B6672" Margin="12,0,0,0"/>
+        </StackPanel>
+        <TextBlock Grid.Row="3" Style="{StaticResource InfoLabel}" Text="Deinstallation"/>
+        <TextBox   Grid.Row="3" Grid.Column="1" Style="{StaticResource InfoValue}" Text="{Binding UninstallString, Mode=OneWay}"/>
+        <TextBlock Grid.Row="4" Style="{StaticResource InfoLabel}" Text="Registry / Paket"/>
+        <TextBox   Grid.Row="4" Grid.Column="1" Style="{StaticResource InfoValue}" Text="{Binding RegistryPath, Mode=OneWay}"/>
+      </Grid>
+    </Border>
+
+    <!-- Programmliste -->
+    <DataGrid x:Name="AppList" Margin="12,0,12,10" AutoGenerateColumns="False" IsReadOnly="True"
+              SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E6E9ED"
+              AlternatingRowBackground="#FAFBFC" Background="White" BorderBrush="#D8DDE3"
+              RowHeight="26" CanUserResizeRows="False" EnableRowVirtualization="True"
+              MouseDoubleClick="AppList_MouseDoubleClick" KeyDown="AppList_KeyDown">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" Width="2.2*"/>
+        <DataGridTextColumn Header="Laufwerk" Binding="{Binding Drive, Mode=OneWay}" Width="70"/>
+        <DataGridTextColumn x:Name="SizeColumn" Binding="{Binding SizeText, Mode=OneWay}" SortMemberPath="SortBytes" Width="95">
+          <DataGridTextColumn.Header>
+            <TextBlock Text="Größe" ToolTip="Auf der Festplatte gemessen. Grau/kursiv mit ≈: nur Registry-Angabe, nicht gemessen."/>
+          </DataGridTextColumn.Header>
+          <DataGridTextColumn.ElementStyle>
+            <Style TargetType="TextBlock">
+              <Setter Property="HorizontalAlignment" Value="Right"/>
+              <Setter Property="Margin" Value="0,0,6,0"/>
+              <Setter Property="FontWeight" Value="SemiBold"/>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEstimate, Mode=OneWay}" Value="True">
+                  <Setter Property="Foreground" Value="#8A939C"/>
+                  <Setter Property="FontWeight" Value="Normal"/>
+                  <Setter Property="FontStyle" Value="Italic"/>
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </DataGridTextColumn.ElementStyle>
+        </DataGridTextColumn>
+        <DataGridTextColumn Header="Grundlage" Binding="{Binding SizeSource, Mode=OneWay}" Width="1.3*"/>
+        <DataGridTextColumn Header="Registry-Angabe" Binding="{Binding RegistrySizeText, Mode=OneWay}" SortMemberPath="RegistryBytes"
+                            Width="105" ElementStyle="{StaticResource RightCell}"/>
+        <DataGridTextColumn Header="Version" Binding="{Binding Version, Mode=OneWay}" Width="100"/>
+        <DataGridTextColumn Header="Hersteller" Binding="{Binding Publisher, Mode=OneWay}" Width="1.2*"/>
+        <DataGridTextColumn Header="Installiert" Binding="{Binding InstallDateText, Mode=OneWay}" SortMemberPath="InstallDateSort" Width="82"/>
+        <DataGridTextColumn Header="Typ" Binding="{Binding Kind, Mode=OneWay}" Width="52"/>
+        <DataGridTextColumn Header="Bereich" Binding="{Binding Scope, Mode=OneWay}" Width="160"/>
+        <DataGridTextColumn Header="Installationsordner" Binding="{Binding InstallPath, Mode=OneWay}" Width="2*"/>
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
+</Window>
