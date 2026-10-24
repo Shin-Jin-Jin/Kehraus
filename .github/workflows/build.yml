@@ -14,9 +14,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
@@ -38,8 +38,10 @@ jobs:
           Copy-Item out/Kehraus.exe, out/Kehraus.exe.config dist/
           Get-ChildItem out -Filter *.dll | Copy-Item -Destination dist/
           Compress-Archive -Path dist/* -DestinationPath Kehraus.zip
+          $files = Get-ChildItem dist | ForEach-Object { '{0} ({1:N0} KB)' -f $_.Name, ($_.Length / 1KB) }
+          Write-Host "::notice title=Paketinhalt::$($files -join ', ')"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Kehraus
           path: dist/
